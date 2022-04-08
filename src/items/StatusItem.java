@@ -19,6 +19,7 @@ public class StatusItem extends Item {
 
         name = st.nextToken();
         description = st.nextToken();
+        quantity = Integer.parseInt(st.nextToken());
         statusItemType = StatusItemType.valueOf(st.nextToken());
         effectAmt = Integer.parseInt(st.nextToken());
     }

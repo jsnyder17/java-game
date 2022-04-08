@@ -1,7 +1,7 @@
 package actors;
 
 import interfaces.EntityInterface;
-import items.Item;
+import items.*;
 import java.util.*;
 
 public class Entity implements EntityInterface {
@@ -14,11 +14,15 @@ public class Entity implements EntityInterface {
     private int endurance;
     private int intelligence;
     private int arcane;
+    private EntityType entityType;
+    private int equippedWeaponIndex;
 
     public Entity() {
         name = "";
         inventory = new ArrayList<Item>();
         hp =  defense = strength = dexterity = endurance = intelligence = arcane = 0;
+        entityType = EntityType.FRIENDLY;
+        equippedWeaponIndex = 0;
     }
 
     public Entity(String data) {
@@ -38,6 +42,8 @@ public class Entity implements EntityInterface {
         endurance = Integer.parseInt(st.nextToken());
         intelligence = Integer.parseInt(st.nextToken());
         arcane = Integer.parseInt(st.nextToken());
+        entityType = EntityType.valueOf(st.nextToken());
+        equippedWeaponIndex = Integer.parseInt(st.nextToken());
 
         st = new StringTokenizer(stMain.nextToken(), "|");
 
@@ -47,7 +53,13 @@ public class Entity implements EntityInterface {
         }
     }
 
-    public void damage(int amt) {
-        hp -= amt;
+    public int getDexterity() { return dexterity; }
+    public int getDefense() { return defense; }
+    public EntityType getEntityType() { return entityType; }
+
+    public Weapon getWeapon() {
+        return (Weapon)inventory.get(equippedWeaponIndex);
     }
+
+    public void damage(int amt) { hp -= amt; }
 }

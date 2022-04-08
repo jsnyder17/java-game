@@ -15,6 +15,9 @@ public class Weapon extends Item {
 
         name = st.nextToken();
         description = st.nextToken();
+        quantity = Integer.parseInt(st.nextToken());
         attackPower = Integer.parseInt(st.nextToken());
     }
+
+    public int getAttackPower() { return attackPower; }
 }

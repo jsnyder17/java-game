@@ -10,9 +10,7 @@ public class Inventory {
         items = new ArrayList<Item>();
     }
 
-    public void addItem(Item item) {
-        items.add(item);
-    }
+    public void addItem(Item item) { items.add(item); }
     public void removeItem(Item item) {
         items.remove(item);
     }
