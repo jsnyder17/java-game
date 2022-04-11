@@ -1,5 +1,7 @@
 package persist;
 
+import items.*;
+import java.util.*;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
@@ -23,24 +25,66 @@ public class DerbyDatabase implements IDatabase {
 
     private static final int MAX_ATTEMPTS = 10;
 
-    public void initialize() {
-        System.out.println("Searching for existing database ... ");
+    public static void main(String[] args) {
+        DerbyDatabase db = new DerbyDatabase();
 
-        File file = new File(Constants.DATABASE_SOURCE);
-
-        if (!file.exists()) {
-            createTables();
-            loadInitialData();
+        if (db.checkDatabase()) {
+            db.dropTables();
         }
 
-        System.out.println("Finished search");
+        System.out.println("Creating database ... ");
+
+        db.createTables();
+        db.loadInitialData();
+
+        System.out.println("Finished creating database");
+
+        db.printDatabase();
     }
 
-    public void loadInitialData() {
-        DerbyDatabase db = new DerbyDatabase();
-        db.createTables();
+    public void printDatabase() {
+        ArrayList<Weapon> weapons = getWeapons();
+        ArrayList<StatusItem> statusItems = getStatusItems();
 
-        db.loadInitialData();
+        for (Weapon weapon : weapons) {
+            System.out.println(weapon.toString());
+        }
+        for (StatusItem statusItem : statusItems) {
+            System.out.println(statusItem.toString());
+        }
+    }
+
+    public void dropTables() {
+        executeTransaction(new Transaction<Boolean>() {
+            @SuppressWarnings("resource")
+            @Override
+            public Boolean execute(Connection conn) throws SQLException {
+                PreparedStatement stmt = null;
+
+                ArrayList<String> tables = new ArrayList<String>();
+
+                tables.add("drop table weapons");
+                tables.add("drop table status_items");
+
+                try {
+                    for (int i = 0; i < tables.size(); i++) {
+                        stmt = conn.prepareStatement(tables.get(i));
+                        stmt.executeUpdate();
+                    }
+                }
+                finally {
+                    DBUtil.closeQuietly(stmt);
+                }
+
+                return true;
+            }
+        });
+    }
+
+    public boolean checkDatabase() {
+        File file = new File(Constants.DATABASE_SOURCE);
+
+        return file.exists();
     }
 
     public void createTables() {
@@ -51,16 +95,10 @@ public class DerbyDatabase implements IDatabase {
                 PreparedStatement stmt = null;
 
                 try {
-                    stmt = conn.prepareStatement(Constants.CREATE_ENTITIES_TABLE);
+                    stmt = conn.prepareStatement(Constants.CREATE_STATUS_ITEMS_TABLE);
                     stmt.executeUpdate();
 
                     stmt = conn.prepareStatement(Constants.CREATE_WEAPONS_TABLE);
-                    stmt.executeUpdate();
-
-                    stmt = conn.prepareStatement(Constants.CREATE_SKILLS_TABLE);
-                    stmt.executeUpdate();
-
-                    stmt = conn.prepareStatement(Constants.CREATE_BALLS);
                     stmt.executeUpdate();
                 }
                 finally {
@@ -68,6 +106,150 @@ public class DerbyDatabase implements IDatabase {
                 }
 
                 return true;
+            }
+        });
+    }
+
+    public void loadInitialData() {
+        executeTransaction(new Transaction<Boolean>() {
+            @SuppressWarnings("resource")
+            @Override
+            public Boolean execute(Connection conn) throws SQLException {
+                PreparedStatement stmt = null;
+
+                try {
+                    List<Weapon> weapons = InitialData.getWeapons();
+                    List<StatusItem> statusItems = InitialData.getStatusItems();
+
+                    try {
+                        int id = 1;
+
+                        // Weapons
+                        stmt = conn.prepareStatement("insert into weapons(id, name, description, item_type, attack_power) values(?,?,?,?,?)");
+
+                        for (Weapon weapon : weapons) {
+                            stmt.setInt(1, id);
+                            stmt.setString(2, weapon.getName());
+                            stmt.setString(3, weapon.getDescription());
+                            stmt.setString(4, weapon.getItemType().toString());
+                            stmt.setInt(5, weapon.getAttackPower());
+                            stmt.addBatch();
+                            id++;
+                        }
+
+                        stmt.executeBatch();
+
+                        // Status items
+                        stmt = conn.prepareStatement("insert into status_items(id, name, description, item_type, effect_amt) values(?, ?, ?, ?, ?)");
+                        id = 1;
+
+                        for (StatusItem statusItem : statusItems) {
+                            stmt.setInt(1, id);
+                            stmt.setString(2, statusItem.getName());
+                            stmt.setString(3, statusItem.getDescription());
+                            stmt.setString(4, statusItem.getItemType().toString());
+                            stmt.setInt(5, statusItem.getEffectAmt());
+                            stmt.addBatch();
+                            id++;
+                        }
+
+                        stmt.executeBatch();
+                    }
+                    finally {
+                        DBUtil.closeQuietly(stmt);
+                    }
+                }
+                catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                return true;
+            }
+        });
+    }
+
+    public ArrayList<Weapon> getWeapons() {
+        return executeTransaction(new Transaction<ArrayList<Weapon>>() {
+            public ArrayList<Weapon> execute(Connection conn) throws SQLException {
+                PreparedStatement stmt = null;
+                ResultSet resultSet = null;
+
+                try {
+                    stmt = conn.prepareStatement("SELECT * FROM weapons");
+
+                    ArrayList<Weapon> weapons = new ArrayList<Weapon>();
+
+                    resultSet = stmt.executeQuery();
+
+                    Boolean found = false;
+
+                    while (resultSet.next()) {
+                        found = true;
+
+                        Weapon weapon = new Weapon();
+                        int index = 1;
+
+                        weapon.setName(resultSet.getString(index++));
+                        weapon.setDescription(resultSet.getString(index++));
+                        weapon.setItemType(ItemType.valueOf(resultSet.getString(index++)));
+                        weapon.setAttackPower(resultSet.getInt(index++));
+
+                        weapons.add(weapon);
+                    }
+
+                    if (!found) {
+                        System.out.println("No weapons found in the database");
+                    }
+
+                    return weapons;
+                }
+                finally {
+                    DBUtil.closeQuietly(stmt);
+                }
+            }
+        });
+    }
+
+    public ArrayList<StatusItem> getStatusItems() {
+        return executeTransaction(new Transaction<ArrayList<StatusItem>>() {
+            public ArrayList<StatusItem> execute(Connection conn) throws SQLException {
+                PreparedStatement stmt = null;
+                ResultSet resultSet = null;
+
+                try {
+                    stmt = conn.prepareStatement("SELECT * FROM status_items");
+
+                    ArrayList<StatusItem> statusItems = new ArrayList<StatusItem>();
+
+                    resultSet = stmt.executeQuery();
+
+                    Boolean found = false;
+
+
+                    while (resultSet.next()) {
+                        found = true;
+
+                        StatusItem statusItem = new StatusItem();
+                        int index = 1;
+
+                        statusItem.setName(resultSet.getString(index++));
+                        statusItem.setDescription(resultSet.getString(index++));
+                        statusItem.setItemType(ItemType.valueOf(resultSet.getString(index++)));
+                        statusItem.setStatusItemType(StatusItemType.valueOf(resultSet.getString(index++)));
+                        statusItem.setEffectAmt(resultSet.getInt(index++));
+
+                        statusItems.add(statusItem);
+                    }
+
+                    if (!found) {
+                        System.out.println("No status items found in the database");
+                    }
+
+                    return statusItems;
+                }
+                finally {
+                    DBUtil.closeQuietly(stmt);
+                }
             }
         });
     }
@@ -126,7 +308,7 @@ public class DerbyDatabase implements IDatabase {
     // TODO: DO NOT PUT THE DB IN THE SAME FOLDER AS YOUR PROJECT - that will cause
     // conflicts later w/Git
     private Connection connect() throws SQLException {
-        Connection conn = DriverManager.getConnection(Constants.DATABASE_SOURCE + "create=true");
+        Connection conn = DriverManager.getConnection(Constants.DATABASE_SOURCE);
 
         // Set autocommit() to false to allow the execution of
         // multiple queries/statements as part of the same transaction.

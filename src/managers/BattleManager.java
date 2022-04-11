@@ -70,6 +70,6 @@ public class BattleManager {
     }
 
     private void attack(Entity attacker, Entity recipient) {
-        recipient.damage(attacker.getWeapon().getAttackPower() - (recipient.getDefense());
+        recipient.damage(attacker.getWeapon().getAttackPower() - (recipient.getDefense()));
     }
 }
