@@ -24,9 +24,12 @@ public class DerbyDatabase implements IDatabase {
     }
 
     private static final int MAX_ATTEMPTS = 10;
+    public String databaseSource = "";
 
     public static void main(String[] args) {
         DerbyDatabase db = new DerbyDatabase();
+
+        db.getDatabaseSource();
 
         if (db.checkDatabase()) {
             db.dropTables();
@@ -40,6 +43,15 @@ public class DerbyDatabase implements IDatabase {
         System.out.println("Finished creating database");
 
         db.printDatabase();
+    }
+
+    public void getDatabaseSource() {
+        if (System.getProperty("os.name").contains("Linux")) {
+            databaseSource = Constants.DATABASE_SOURCE_LINUX;
+        }
+        else if (System.getProperty("os.name").contains("Windows")) {
+            databaseSource = Constants.DATABASE_SOURCE_WIN;
+        }
     }
 
     public void printDatabase() {
@@ -82,7 +94,7 @@ public class DerbyDatabase implements IDatabase {
     }
 
     public boolean checkDatabase() {
-        File file = new File(Constants.DATABASE_SOURCE);
+        File file = new File(databaseSource);
 
         return file.exists();
     }
@@ -125,7 +137,7 @@ public class DerbyDatabase implements IDatabase {
                         int id = 1;
 
                         // Weapons
-                        stmt = conn.prepareStatement("insert into weapons(id, name, description, item_type, attack_power) values(?,?,?,?,?)");
+                        stmt = conn.prepareStatement(Constants.INSERT_INTO_WEAPONS_QUERY);
 
                         for (Weapon weapon : weapons) {
                             stmt.setInt(1, id);
@@ -140,7 +152,7 @@ public class DerbyDatabase implements IDatabase {
                         stmt.executeBatch();
 
                         // Status items
-                        stmt = conn.prepareStatement("insert into status_items(id, name, description, item_type, effect_amt) values(?, ?, ?, ?, ?)");
+                        stmt = conn.prepareStatement(Constants.INSERT_INTO_STATUS_ITEMS_QUERY);
                         id = 1;
 
                         for (StatusItem statusItem : statusItems) {
@@ -308,7 +320,7 @@ public class DerbyDatabase implements IDatabase {
     // TODO: DO NOT PUT THE DB IN THE SAME FOLDER AS YOUR PROJECT - that will cause
     // conflicts later w/Git
     private Connection connect() throws SQLException {
-        Connection conn = DriverManager.getConnection(Constants.DATABASE_SOURCE);
+        Connection conn = DriverManager.getConnection(databaseSource);
 
         // Set autocommit() to false to allow the execution of
         // multiple queries/statements as part of the same transaction.
