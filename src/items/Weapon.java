@@ -22,4 +22,6 @@ public class Weapon extends Item {
     public int getAttackPower() { return attackPower; }
 
     public void setAttackPower(int attackPower) { this.attackPower = attackPower; }
+
+    public String toString() { return name + " | " + description + " | " + itemType + " | " + attackPower; }
 }

@@ -34,7 +34,7 @@ public class PopulateCSV {
     }
 
     public static void populateStatusItems() {
-        String fileName = "resources/statusItems.csv";
+        String fileName = "resources/statusitems.csv";
 
         File file = new File(fileName);
 

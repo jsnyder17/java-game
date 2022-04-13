@@ -31,9 +31,15 @@ public class DerbyDatabase implements IDatabase {
 
         db.getDatabaseSource();
 
+        db.dropTables();
+
+        /*
         if (db.checkDatabase()) {
+            System.out.println("Previous database found. Removing ... ");
             db.dropTables();
         }
+        */
+
 
         System.out.println("Creating database ... ");
 
@@ -94,7 +100,7 @@ public class DerbyDatabase implements IDatabase {
     }
 
     public boolean checkDatabase() {
-        File file = new File(databaseSource);
+        File file = new File(Constants.DATABASE_SOURCE_WIN_REF);
 
         return file.exists();
     }
@@ -194,6 +200,8 @@ public class DerbyDatabase implements IDatabase {
                     resultSet = stmt.executeQuery();
 
                     Boolean found = false;
+
+                    System.out.println(resultSet.toString());
 
                     while (resultSet.next()) {
                         found = true;
