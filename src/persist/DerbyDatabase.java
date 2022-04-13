@@ -25,6 +25,7 @@ public class DerbyDatabase implements IDatabase {
 
     private static final int MAX_ATTEMPTS = 10;
     public String databaseSource = "";
+    public String databaseSourceRef = "";
 
     public static void main(String[] args) {
         DerbyDatabase db = new DerbyDatabase();
@@ -54,9 +55,11 @@ public class DerbyDatabase implements IDatabase {
     public void getDatabaseSource() {
         if (System.getProperty("os.name").contains("Linux")) {
             databaseSource = Constants.DATABASE_SOURCE_LINUX;
+            databaseSourceRef = Constants.DATABASE_SOURCE_LINUX_REF;
         }
         else if (System.getProperty("os.name").contains("Windows")) {
             databaseSource = Constants.DATABASE_SOURCE_WIN;
+            databaseSourceRef = Constants.DATABASE_SOURCE_WIN_REF;
         }
     }
 
@@ -100,7 +103,7 @@ public class DerbyDatabase implements IDatabase {
     }
 
     public boolean checkDatabase() {
-        File file = new File(Constants.DATABASE_SOURCE_WIN_REF);
+        File file = new File(databaseSourceRef);
 
         return file.exists();
     }

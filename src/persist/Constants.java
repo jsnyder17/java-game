@@ -5,7 +5,7 @@ public class Constants {
     public static final String DATABASE_SOURCE_WIN = "jdbc:derby:C:/Users/" + System.getProperty("user.name") + "/Documents/Java_Test_DB/database.db;create=true";    // Location of the database on the client machine
     public static final String DATABASE_SOURCE_LINUX = "jdbc:derby:/home/" + System.getProperty("user.name") + "/Documents/Java_Test_DB/database.db;create=true";
     public static final String DATABASE_SOURCE_WIN_REF = "jdbc:derby:C:/Users/" + System.getProperty("user.name") + "/Documents/Java_Test_DB/database.db";
-
+    public static final String DATABASE_SOURCE_LINUX_REF = "jdbc:derby:/home/" + System.getProperty("user.name") + "/Documents/Java_Test_DB/database.db";
     // Table creation queries
     public static final String CREATE_ENTITIES_TABLE = "";
     public static final String CREATE_WEAPONS_TABLE = "create table weapons(id int primary key, name varchar(40), description varchar(128), item_type varchar(40), attack_power int)";
